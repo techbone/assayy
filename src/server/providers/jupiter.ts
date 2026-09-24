@@ -142,7 +142,9 @@ export class JupiterClient {
     const result = await this.request(outputMint, inputRaw, taker);
     if (result.errorCode !== undefined || !result.transaction)
       throw new OrderRejected(
-        result.errorMessage ?? "Jupiter could not build this order",
+        /insufficient/i.test(result.errorMessage ?? "")
+          ? "Your wallet doesn't have enough USDC for this amount (keep a little SOL for fees too). Nothing was signed."
+          : (result.errorMessage ?? "Jupiter could not build this order"),
       );
     let bytes: Uint8Array;
     try {

@@ -105,14 +105,28 @@ describe("Jupiter order and execute", () => {
         order({
           transaction: "",
           errorCode: 1,
-          errorMessage: "Insufficient funds <script>",
+          errorMessage: "Route failed <script>",
         }),
       ),
     )
       .order(X, 2_000_000n, TAKER)
       .catch((e: unknown) => e);
     expect(error).toBeInstanceOf(OrderRejected);
-    expect((error as Error).message).toBe("Insufficient funds script");
+    expect((error as Error).message).toBe("Route failed script");
+  });
+  it("explains insufficient funds in plain words", async () => {
+    await expect(
+      new JupiterClient(
+        "k",
+        reply(
+          order({
+            transaction: "",
+            errorCode: 1,
+            errorMessage: "Insufficient funds",
+          }),
+        ),
+      ).order(X, 2_000_000n, TAKER),
+    ).rejects.toThrow(/doesn't have enough USDC/);
   });
   it("keeps structured failures from execute and never retries", async () => {
     const fetcher = reply(
