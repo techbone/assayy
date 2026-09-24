@@ -334,7 +334,7 @@ describe("comparison contract", () => {
       }).success,
     ).toBe(false);
     expect(
-      comparisonRequest.safeParse({ ticker: "FAKE", amount: "100" }).success,
+      comparisonRequest.safeParse({ ticker: "aapl;", amount: "100" }).success,
     ).toBe(false);
   });
 });

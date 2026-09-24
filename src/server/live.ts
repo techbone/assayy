@@ -145,7 +145,7 @@ export async function liveComparison(
   if (!asset)
     throw new LiveError(
       "UNSUPPORTED_ASSET",
-      `${request.ticker} wrappers are not verified for live comparison yet. AAPL is live.`,
+      `${request.ticker} is not verified for live comparison yet.`,
     );
   const clock = deps.clock ?? (() => Math.floor(Date.now() / 1000));
   const total = parseUnits(request.amount, 6);
@@ -251,7 +251,7 @@ export async function liveComparison(
     slot: chain.slot,
     reasons: [
       "Read-only comparison — wallet execution is not enabled in this build",
-      "No verified Pyth reference yet — premium to fair value is not shown",
+      "Pyth fair-value check not connected yet — wrappers are compared against each other",
       ...(session === "open"
         ? []
         : [

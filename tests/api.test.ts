@@ -116,16 +116,16 @@ describe("live API", () => {
     expect(health()).toBeTruthy();
     expect(await health().json()).toMatchObject({
       liveReady: true,
-      verifiedAssets: ["AAPL"],
+      verifiedAssets: expect.arrayContaining(["AAPL", "NVDA", "SPY"]),
       fairValueReference: false,
     });
   });
   it("rejects unverified tickers and demo-only scenarios", async () => {
     liveEnv();
     vi.stubGlobal("fetch", upstream());
-    const nvda = await compare(request("ticker=NVDA&amount=100"));
-    expect(nvda.status).toBe(422);
-    expect((await nvda.json()).code).toBe("UNSUPPORTED_ASSET");
+    const unverified = await compare(request("ticker=XRX&amount=100"));
+    expect(unverified.status).toBe(422);
+    expect((await unverified.json()).code).toBe("UNSUPPORTED_ASSET");
     expect(
       (await compare(request("ticker=AAPL&amount=100&scenario=closed"))).status,
     ).toBe(400);

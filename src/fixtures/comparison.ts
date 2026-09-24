@@ -6,6 +6,11 @@ import { allocationGrid, optimize } from "../domain/optimizer";
 import { presentComparison } from "../domain/present";
 import type { OraclePrice, Quote, Wrapper } from "../domain/types";
 
+export const DEMO_STOCKS = [
+  { ticker: "AAPL", name: "Apple" },
+  { ticker: "NVDA", name: "NVIDIA" },
+] as const;
+
 /** Synthetic curves only. These are not recorded or live market prices. */
 export function demoComparison(
   request: ComparisonRequest,

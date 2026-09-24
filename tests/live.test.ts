@@ -12,7 +12,7 @@ import {
 import { ProviderError } from "../src/server/providers/http";
 import { JupiterClient, USDC_MINT } from "../src/server/providers/jupiter";
 import { SolanaClient } from "../src/server/providers/solana";
-import { TOKEN_2022_PROGRAM } from "../src/server/registry";
+import { TOKEN_2022_PROGRAM, verifiedAssets } from "../src/server/registry";
 import { AAPLON_MINT_BASE64, AAPLX_MINT_BASE64 } from "./fixtures/mints";
 
 const X = "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp";
@@ -215,7 +215,7 @@ describe("live comparison", () => {
   it("refuses unverified tickers", async () => {
     await expect(
       liveComparison(
-        { ticker: "NVDA", amount: "100", scenario: "normal" },
+        { ticker: "XRX", amount: "100", scenario: "normal" },
         { jupiter: jupiter(), solana: chain() },
       ),
     ).rejects.toBeInstanceOf(LiveError);
@@ -308,5 +308,37 @@ describe("Jupiter free-tier call budget", () => {
     const reserve = vi.spyOn(budget, "reserve");
     await run({ budget });
     expect(reserve).toHaveBeenCalledWith(4);
+  });
+});
+
+describe("verified registry", () => {
+  const base58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+  it("has unique tickers and mints with issuer address patterns", () => {
+    const tickers = verifiedAssets.map((a) => a.ticker);
+    const mints = verifiedAssets.flatMap((a) => a.wrappers.map((w) => w.mint));
+    expect(new Set(tickers).size).toBe(tickers.length);
+    expect(new Set(mints).size).toBe(mints.length);
+    for (const asset of verifiedAssets) {
+      const [x, on] = asset.wrappers;
+      expect(asset.ticker).toMatch(/^[A-Z]{1,6}$/);
+      expect(x.mint).toMatch(base58);
+      expect(on.mint).toMatch(base58);
+      expect(x.mint.startsWith("Xs")).toBe(true); // xStocks vanity prefix
+      expect(on.mint.endsWith("ondo")).toBe(true); // Ondo vanity suffix
+      expect([x.metadataSymbol, on.metadataSymbol]).toEqual([
+        `${asset.ticker}x`,
+        `${asset.ticker}on`,
+      ]);
+    }
+  });
+  it("keeps the originally admitted AAPL pair", () => {
+    expect(
+      verifiedAssets
+        .find((a) => a.ticker === "AAPL")!
+        .wrappers.map((w) => w.mint),
+    ).toEqual([
+      "XsbEhLAtcf6HdfpFZ5xEMdqW8nfAvcsP5bdudRLJzJp",
+      "123mYEnRLM2LLYsJW3K6oyYh8uP1fngj732iG638ondo",
+    ]);
   });
 });

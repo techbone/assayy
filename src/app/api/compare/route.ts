@@ -1,5 +1,5 @@
 import { comparisonRequest } from "../../../domain/contracts";
-import { demoComparison } from "../../../fixtures/comparison";
+import { DEMO_STOCKS, demoComparison } from "../../../fixtures/comparison";
 import { configuration } from "../../../server/config";
 import {
   BusyError,
@@ -38,7 +38,9 @@ export async function GET(request: Request) {
     return fail(503, "Comparison unavailable");
   }
   if (config.mode === "demo")
-    return Response.json(demoComparison(parsed.data), { headers });
+    return DEMO_STOCKS.some((stock) => stock.ticker === parsed.data.ticker)
+      ? Response.json(demoComparison(parsed.data), { headers })
+      : fail(400, "Unknown ticker");
   if (!config.jupiterKey || !config.rpcUrl)
     return fail(
       503,

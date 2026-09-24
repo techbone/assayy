@@ -4,7 +4,8 @@ import type { MarketSession } from "./types";
 
 export const comparisonRequest = z
   .object({
-    ticker: z.enum(["AAPL", "NVDA"]),
+    // Syntax only; demo fixtures and the live registry decide which tickers exist.
+    ticker: z.string().regex(/^[A-Z]{1,6}$/, "Unknown ticker"),
     amount: z
       .string()
       .max(24)
