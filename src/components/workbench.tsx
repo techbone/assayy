@@ -7,7 +7,13 @@ function display(value: string) {
   const [whole = "0", fraction] = value.split(".");
   return `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}${fraction === undefined ? "" : `.${fraction}`}`;
 }
-export function Workbench({ mode }: { mode: "demo" | "live" | "unavailable" }) {
+export function Workbench({
+  mode,
+  stocks,
+}: {
+  mode: "demo" | "live" | "unavailable";
+  stocks: { ticker: string; name: string }[];
+}) {
   const [ticker, setTicker] = useState<ComparisonRequest["ticker"]>("AAPL");
   const [amount, setAmount] = useState("10000");
   const [scenario, setScenario] =
@@ -217,7 +223,7 @@ export function Workbench({ mode }: { mode: "demo" | "live" | "unavailable" }) {
             {mode === "demo"
               ? "Synthetic prices. Real comparison logic. No funds move in this preview."
               : live
-                ? "Real Jupiter quotes for issuer-verified Apple wrappers, normalized with on-chain multipliers. Read-only — nothing is signed or sent."
+                ? `Real Jupiter quotes for ${stocks.length} stocks and ETFs, each issued as two tokens (xStocks and Ondo). Read-only — nothing is signed or sent.`
                 : "Live integrations are being verified. Trading is unavailable."}
           </span>
         </div>
@@ -237,13 +243,14 @@ export function Workbench({ mode }: { mode: "demo" | "live" | "unavailable" }) {
               value={ticker}
               onChange={(event) => {
                 invalidate();
-                setTicker(event.target.value as ComparisonRequest["ticker"]);
+                setTicker(event.target.value);
               }}
             >
-              <option value="AAPL">AAPL — Apple</option>
-              <option value="NVDA" disabled={live}>
-                NVDA — NVIDIA{live ? " (verification pending)" : ""}
-              </option>
+              {stocks.map((stock) => (
+                <option key={stock.ticker} value={stock.ticker}>
+                  {stock.ticker} — {stock.name}
+                </option>
+              ))}
             </select>
             <label htmlFor="amount">Spend amount</label>
             <div className="amount-field">
@@ -428,12 +435,19 @@ export function Workbench({ mode }: { mode: "demo" | "live" | "unavailable" }) {
                             ? "closed"
                             : "session unknown"}
                       </span>
-                      <span>Fair-value oracle: pending</span>
+                      <span>Pyth fair-value check: not connected</span>
                       {result.source.slot !== null && (
                         <span>Slot {result.source.slot.toLocaleString()}</span>
                       )}
                     </div>
                   </div>
+                )}
+                {live && (
+                  <p className="calculation-note explainer">
+                    Same {result.ticker}, two tokens. Each is converted into
+                    real {result.ticker} shares using its on-chain multiplier —
+                    the cheaper one simply buys you more stock.
+                  </p>
                 )}
                 <div className="wrapper-table">
                   <div className="table-head">

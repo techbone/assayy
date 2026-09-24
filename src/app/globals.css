@@ -770,6 +770,10 @@ html[data-theme="dark"] .footer-tag {
     box-shadow: 0 0 0 0 rgb(63 143 79 / 0);
   }
 }
+.explainer {
+  margin: 0 0 16px;
+  font-size: 11px;
+}
 .premium.best {
   color: #3f7a45;
   font-weight: bold;
