@@ -23,7 +23,7 @@ flowchart LR
     EXEC -. signatures and reconciliation .-> RECEIPT[Browser receipt and Solana ledger]
 ```
 
-Implemented now: UI, demo and live comparison endpoints, domain logic, verified AAPL registry, Token-2022 mint reads over RPC, live Jupiter quote orchestration, request validation, typed error boundaries, configuration health and tests. The Pyth reference, simulation, wallet and execution arrows are still pending. No external program deployed.
+Implemented now: UI, demo and live comparison endpoints, domain logic, 17-market verified registry, Token-2022 mint reads over RPC, live Jupiter quote orchestration with a free-tier call budget, and capped wallet buying: a Jupiter order built for the user's wallet, a signer check, wallet sign-only via Wallet Standard, and Jupiter `/execute` with receipts. Also request validation, typed error boundaries, configuration health and tests. Still pending: the Pyth reference, sells, and split execution. No external program is deployed.
 
 ## Request lifecycle
 

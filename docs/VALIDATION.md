@@ -74,3 +74,13 @@ GLD: GLDx 392.4727 (1.8 bps) | GLDon 392.3993 (0.0 bps)
 ```
 
 Admitted: AAPL, NVDA, TSLA, MSFT, GOOGL, AMZN, META, NFLX, AMD, COIN, HOOD, MSTR, PLTR, CRCL, SPY, QQQ, GLD. The remaining ~213 overlapping underlyings are not admitted until they pass the same checks.
+
+## Wallet buying — September 24, 2026
+
+- **Design.** Buying is off unless `ASSAY_EXECUTION=on`, and capped per order (default 5 USDC, hard ceiling 25). `/api/buy/quote` takes ticker, issuer, amount and the user's address, never a mint. It re-reads the mint through the same fail-closed admission as comparisons, requests a Jupiter v2 order with `taker`, and rejects the transaction unless the user's address is a required signer. The wallet signs only (Wallet Standard `solana:signTransaction`). `/api/buy/execute` forwards once to Jupiter `/execute` with a 45 s timeout; a timeout is reported as "outcome unknown — check Solscan, do not resubmit". The server holds no keys.
+- **Tests.** 111 tests pass, adding coverage for: off by default, the cap, strict bodies, the v0 signer check (accepts the taker, rejects another signer), plain insufficient-funds messages, structured execute failures without retry, and timeout → `OUTCOME_UNKNOWN`. A real mainnet taker order for an unfunded address passed the signer check. A headless browser walkthrough with a non-signing test wallet covered connect → review → decline at 1280px and 390px, with no overflow.
+- **First real buy.** A 1 USDC buy was refused as "insufficient funds" when the wallet held 0.999442 USDC; Jupiter checks balances, and the message was made plainer. After a top-up, the buy landed: [5AVb6bYb…YBgc3D](https://solscan.io/tx/5AVb6bYb5Vszu2XNysCG1KNXhzQqaWTTNJWYeUvtmHeQMSm2hWre328PpzsRpVivG1Jd6nygUwa1Gy4RZ7YBgc3D), slot 450129188, 19:54:09 UTC, finalized, no error. Verified on-chain with `getTransaction`:
+  - The only signer was the user's wallet.
+  - USDC went 1.296446 → 0.296446 (exactly 1.000000 paid).
+  - AAPLx (`XsbEh…JzJp`) went 0 → 0.00295111, which is 0.0029608 Apple shares at the active ×1.003269 multiplier.
+  - Network fee 0.000005516 SOL; total SOL change 0.001565, including the one-time Token-2022 account deposit.

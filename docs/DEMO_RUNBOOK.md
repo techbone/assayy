@@ -10,9 +10,11 @@
 
 1:20–1:45 — Show the fail-closed design: read-only mode, multipliers read on-chain, the US-session label, and the safety rules (paused token, changed settings or a dividend update in progress stops the comparison).
 
-1:45–2:00 — Roadmap: Pyth fair-value guard once feed access is verified, wallet execution with minimum-received checks, more verified tickers.
+1:45–2:20 — Buy: compare AAPL at 1, connect Phantom, Review buy (pay, shares, guaranteed minimum, SOL cost), confirm in the wallet, show the receipt and open Solscan.
 
-Do not show or narrate wallet execution or a Pyth premium until they are live. The live UI does not display Pyth.
+2:20–2:35 — Roadmap: sell and rebalance, a Pyth fair-value guard once access is verified, more verified tickers.
+
+Wallet buying is live (capped at 5 USDC). Do not narrate a Pyth premium; the live UI does not display Pyth.
 
 ## Target story once execution and Pyth are live
 
