@@ -4,6 +4,7 @@
 
 **Live app:** https://agentsure-web-yrz8.vercel.app · Solana mainnet · buying capped at $5 per order
 **First mainnet buy:** [1 USDC → 0.00295111 AAPLx on Solscan](https://solscan.io/tx/5AVb6bYb5Vszu2XNysCG1KNXhzQqaWTTNJWYeUvtmHeQMSm2hWre328PpzsRpVivG1Jd6nygUwa1Gy4RZ7YBgc3D)
+**Demo video:** https://youtu.be/9OcsrvKsc14
 **Track:** Stocklana 2026, main track
 
 ---
