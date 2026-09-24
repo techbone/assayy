@@ -181,4 +181,4 @@ The suite covers:
 
 ## Disclosure
 
-Built for Stocklana 2026 as a new Solana implementation. Third-party packages are listed in `package.json` and locked in `package-lock.json`: Next.js, React, Zod, Wallet Standard (`@wallet-standard/app`, `@wallet-standard/base`), Vitest and Prettier. Market data comes from Jupiter and Solana mainnet; token addresses and share semantics come from the issuers' published sources linked above. An open-source license has not been selected yet.
+Built for Stocklana 2026 as a new Solana implementation. Third-party packages are listed in `package.json` and locked in `package-lock.json`: Next.js, React, Zod, Wallet Standard (`@wallet-standard/app`, `@wallet-standard/base`), Vitest and Prettier. Market data comes from Jupiter and Solana mainnet; token addresses and share semantics come from the issuers' published sources linked above. Released under the [MIT License](LICENSE).
