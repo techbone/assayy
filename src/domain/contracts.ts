@@ -68,3 +68,56 @@ export type Comparison = {
   source: { slot: number | null; quotes: number };
   execution: { enabled: false; reasons: string[] };
 };
+
+const address = z.string().regex(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/);
+export const buyRequest = z
+  .object({
+    ticker: z.string().regex(/^[A-Z]{1,6}$/),
+    wrapper: z.enum(["x", "on"]),
+    amount: z
+      .string()
+      .max(24)
+      .refine((value) => {
+        try {
+          return parseUnits(value, 6) >= 1_000_000n;
+        } catch {
+          return false;
+        }
+      }, "Enter at least 1 USDC, with at most six decimal places"),
+    taker: address,
+  })
+  .strict();
+export type BuyRequest = z.infer<typeof buyRequest>;
+export const executeRequest = z
+  .object({
+    ticker: z.string().regex(/^[A-Z]{1,6}$/),
+    wrapper: z.enum(["x", "on"]),
+    requestId: z.string().regex(/^[\w-]{8,128}$/),
+    signedTransaction: z
+      .string()
+      .max(2_000)
+      .regex(/^[A-Za-z0-9+/]+={0,2}$/),
+  })
+  .strict();
+export type ExecuteRequest = z.infer<typeof executeRequest>;
+export type BuyQuote = {
+  requestId: string;
+  transaction: string;
+  label: string;
+  issuer: string;
+  mint: string;
+  amount: string;
+  tokens: string;
+  shares: string;
+  minimumShares: string;
+  router: string;
+  gasless: boolean;
+  expiresAt: number;
+};
+export type BuyResult = {
+  status: "confirmed" | "failed";
+  signature: string | null;
+  message: string;
+  paid: string | null;
+  receivedShares: string | null;
+};

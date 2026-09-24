@@ -10,7 +10,10 @@ export function GET() {
         status: "ok",
         mode: config.mode,
         network: "solana-mainnet-beta",
-        executionEnabled: false,
+        executionEnabled: config.execution,
+        executionMaxUsdc: config.execution
+          ? (Number(config.executionMaxRaw) / 1e6).toString()
+          : null,
         configured: {
           jupiter: Boolean(config.jupiterKey),
           pyth: Boolean(config.pythKey),

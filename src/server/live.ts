@@ -2,13 +2,21 @@ import "server-only";
 import {
   add,
   compare,
+  format,
   divide,
   multiply,
   parseUnits,
   ratio,
   type Ratio,
 } from "../domain/amount";
-import type { Comparison, ComparisonRequest } from "../domain/contracts";
+import type {
+  BuyQuote,
+  BuyRequest,
+  BuyResult,
+  Comparison,
+  ComparisonRequest,
+  ExecuteRequest,
+} from "../domain/contracts";
 import type { DecodedMint } from "../domain/mint";
 import { normalizeShares } from "../domain/normalization";
 import { optimize } from "../domain/optimizer";
@@ -30,7 +38,8 @@ export class LiveError extends Error {
       | "UNSUPPORTED_ASSET"
       | "ASSET_STATE_CHANGED"
       | "CORPORATE_ACTION_WINDOW"
-      | "NO_BASELINE",
+      | "NO_BASELINE"
+      | "OVER_LIMIT",
     message: string,
   ) {
     super(message);
@@ -41,7 +50,7 @@ const QUOTE_TTL_SECONDS = 20;
 // xStocks asks integrators to pause around multiplier activation.
 const MULTIPLIER_BUFFER_SECONDS = 15 * 60;
 
-function admit(
+export function admit(
   entry: VerifiedWrapper,
   mint: DecodedMint & { owner: string },
   now: number,
@@ -293,4 +302,136 @@ export function cachedLiveComparison(
   recent.set(key, { until: nowMs + 8_000, result });
   result.catch(() => recent.delete(key));
   return result;
+}
+
+function wrapperEntry(ticker: string, wrapper: string) {
+  const entry = findAsset(ticker)?.wrappers.find((w) => w.id === wrapper);
+  if (!entry)
+    throw new LiveError(
+      "UNSUPPORTED_ASSET",
+      `${ticker} is not verified for live comparison yet.`,
+    );
+  return entry;
+}
+/** Jupiter reports RFQ expiry as a timestamp; aggregator routes use block height instead. */
+function orderExpiry(value: string | number | null | undefined, now: number) {
+  let at =
+    typeof value === "number"
+      ? value
+      : value && /^\d+$/.test(value)
+        ? Number(value)
+        : value
+          ? Date.parse(value) / 1000
+          : Number.NaN;
+  if (at > 1e12) at /= 1000;
+  return Number.isFinite(at)
+    ? Math.min(Math.floor(at), now + 60)
+    : now + QUOTE_TTL_SECONDS;
+}
+
+/** A signable buy of one verified wrapper, re-checked against chain state. The server never signs. */
+export async function prepareBuy(
+  request: BuyRequest,
+  deps: {
+    jupiter: JupiterClient;
+    solana: SolanaClient;
+    maxInputRaw: bigint;
+    budget?: CallBudget;
+    clock?: () => number;
+  },
+): Promise<BuyQuote> {
+  const entry = wrapperEntry(request.ticker, request.wrapper);
+  const total = parseUnits(request.amount, 6);
+  if (total > deps.maxInputRaw)
+    throw new LiveError(
+      "OVER_LIMIT",
+      `Buying is capped at ${format(ratio(deps.maxInputRaw, 1_000_000n), 2)} USDC per order during the launch.`,
+    );
+  await deps.budget?.reserve(1);
+  const [chain, order] = await Promise.all([
+    deps.solana.mints([entry.mint]),
+    deps.jupiter.order(entry.mint, total, request.taker),
+  ]);
+  const now = (deps.clock ?? (() => Math.floor(Date.now() / 1000)))();
+  const wrapper = admit(entry, chain.mints[0]!, now);
+  const expiresAt = orderExpiry(order.expireAt, now);
+  const out = BigInt(order.outAmount);
+  const minimum = BigInt(order.otherAmountThreshold ?? order.outAmount);
+  return {
+    requestId: order.requestId,
+    transaction: order.transaction,
+    label: entry.label,
+    issuer: entry.issuer,
+    mint: entry.mint,
+    amount: format(ratio(total, 1_000_000n), 6),
+    tokens: format(ratio(out, 10n ** BigInt(entry.decimals)), 6),
+    shares: format(normalizeShares(out, wrapper.exposure, now, expiresAt), 6),
+    minimumShares: format(
+      normalizeShares(minimum, wrapper.exposure, now, expiresAt),
+      6,
+    ),
+    router: order.swapType
+      ? `${order.router} · ${order.swapType}`
+      : order.router,
+    gasless: order.gasless === true,
+    expiresAt,
+  };
+}
+
+function failureMessage(code: number) {
+  if (code <= -2000)
+    return "The market maker did not fill this order. Nothing was bought — get a new quote.";
+  if (code <= -1000)
+    return "The transaction did not land. Nothing should have been bought — check Solscan if a signature is shown.";
+  if (code < 0)
+    return "The quote expired or was already used. Nothing was bought — get a new quote.";
+  return "The swap failed. Nothing was bought.";
+}
+
+/** Forwards a wallet-signed order once. The caller must not resubmit on an unknown outcome. */
+export async function settleBuy(
+  request: ExecuteRequest,
+  deps: { jupiter: JupiterClient; solana: SolanaClient; clock?: () => number },
+): Promise<BuyResult> {
+  const entry = wrapperEntry(request.ticker, request.wrapper);
+  const result = await deps.jupiter.execute(
+    request.requestId,
+    request.signedTransaction,
+  );
+  const paid = result.totalInputAmount
+    ? format(ratio(BigInt(result.totalInputAmount), 1_000_000n), 6)
+    : null;
+  if (result.status !== "Success")
+    return {
+      status: "failed",
+      signature: result.signature ?? null,
+      message: failureMessage(result.code),
+      paid: null,
+      receivedShares: null,
+    };
+  let receivedShares: string | null = null;
+  try {
+    // Report received shares with the multiplier in force now; the purchase already happened.
+    const now = (deps.clock ?? (() => Math.floor(Date.now() / 1000)))();
+    const chain = await deps.solana.mints([entry.mint]);
+    const wrapper = admit(entry, chain.mints[0]!, now);
+    if (result.totalOutputAmount)
+      receivedShares = format(
+        normalizeShares(
+          BigInt(result.totalOutputAmount),
+          wrapper.exposure,
+          now,
+        ),
+        6,
+      );
+  } catch {
+    receivedShares = null;
+  }
+  return {
+    status: "confirmed",
+    signature: result.signature ?? null,
+    message: `Bought ${entry.label} on Solana mainnet.`,
+    paid,
+    receivedShares,
+  };
 }
