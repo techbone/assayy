@@ -43,3 +43,34 @@ Still not done: Pyth fair-value reference (access pending), wallet execution, pu
 
 - Vercel production deployment smoke-tested: health 200 with `liveReady: true`. Real comparisons at 1, 10,000 and 250,000 USDC were served during US market hours, when AAPLon won at 10k and AAPLx at 250k, so the winner changes with size and time. NVDA returned 422, invalid amounts and demo-only scenarios 400. No response body contained the RPC URL or API keys.
 - The first burst test (3 comparisons in ~6 s) got a 429 on the third. That led to the server-side call budget and UI auto-retry described above.
+
+## Seventeen verified markets — September 24, 2026, ~14:40 UTC
+
+Admission followed the same gate as AAPL, using issuer-published addresses only:
+
+1. **Issuer identity.** xStocks mints come from the issuer's public API ([api.xstocks.fi/api/v2/public/assets](https://api.xstocks.fi/api/v2/public/assets), Solana deployments, 1,124 assets across 12 pages). Ondo mints come from Ondo's published [mainnet constants](https://github.com/ondoprotocol/gm-solana-simulator/blob/main/constants.rs) (443 assets). 230 underlyings are offered by both. Both sources independently return the AAPL pair admitted earlier.
+2. **Chain state.** One `getMultipleAccounts` read of all 34 mints. Every mint is Token-2022 with the expected symbol and decimals (xStocks 8, Ondo 9), the issuer's exact extension profile (identical to AAPL), not paused, and no transfer-hook program. NFLX carries a ×10 multiplier on both issuers after Netflix's 10-for-1 split, a live case where raw token counts would mislead by 10×.
+3. **Economic cross-check.** Real 10,000 USDC Jupiter quotes put each pair's cost per share within 0–21 bps of each other (NFLXx needed one retry). A wrong share conversion would disagree by whole percentages or 10×.
+4. **End-to-end.** The opt-in smoke test ran every ticker through `liveComparison` on mainnet (17/17 passed, 10,000 USDC, US market open):
+
+```
+AAPL: AAPLx 338.6217 (0.0 bps) | AAPLon 338.6221 (0.0 bps)
+NVDA: NVDAx 223.8498 (0.0 bps) | NVDAon 223.9036 (2.4 bps)
+TSLA: TSLAx 379.6164 (0.0 bps) | TSLAon 379.8554 (6.2 bps)
+MSFT: MSFTx 495.7460 (0.0 bps) | MSFTon 496.1458 (8.0 bps)
+GOOGL: GOOGLx 341.6955 (2.6 bps) | GOOGLon 341.6045 (0.0 bps)
+AMZN: AMZNx 248.2391 (0.0 bps) | AMZNon 248.2498 (0.4 bps)
+META: METAx 770.4891 (0.0 bps) | METAon 770.7277 (3.0 bps)
+NFLX: NFLXx 71.8910 (5.1 bps) | NFLXon 71.8538 (0.0 bps)
+AMD: AMDx 617.2260 (0.0 bps) | AMDon 617.6463 (6.8 bps)
+COIN: COINx 199.5820 (0.0 bps) | COINon 199.7081 (6.3 bps)
+HOOD: HOODx 122.0629 (0.0 bps) | HOODon 122.1935 (10.6 bps)
+MSTR: MSTRx 162.5470 (0.0 bps) | MSTRon 162.8010 (15.6 bps)
+PLTR: PLTRx 193.7938 (3.8 bps) | PLTRon 193.7201 (0.0 bps)
+CRCL: CRCLx 93.2547 (0.0 bps) | CRCLon 93.3864 (14.1 bps)
+SPY: SPYx 767.8878 (0.0 bps) | SPYon 768.3493 (6.0 bps)
+QQQ: QQQx 740.2640 (0.0 bps) | QQQon 740.8186 (7.4 bps)
+GLD: GLDx 392.4727 (1.8 bps) | GLDon 392.3993 (0.0 bps)
+```
+
+Admitted: AAPL, NVDA, TSLA, MSFT, GOOGL, AMZN, META, NFLX, AMD, COIN, HOOD, MSTR, PLTR, CRCL, SPY, QQQ, GLD. The remaining ~213 overlapping underlyings are not admitted until they pass the same checks.

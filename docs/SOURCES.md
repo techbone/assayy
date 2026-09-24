@@ -16,7 +16,8 @@ Reviewed September 24, 2026. Provider documentation can change; live contract ch
 - [Ondo stocks overview](https://ondo.finance/ondo-stocks): issuer differences, asset availability and access conditions.
 - [xStocks multipliers for developers](https://docs.xstocks.fi/developers/multipliers): `scaledAmount = rawAmount × multiplier`; one scaled unit is one share; pause around activation. Basis for the admitted AAPLx conversion.
 - [Ondo token and quote pricing](https://docs.ondo.finance/ondo-global-markets/token-and-quote-pricing): display multiplier makes displayed units trade at the stock price (one unit = one share). Basis for the admitted AAPLon conversion.
+- [xStocks public assets API](https://api.xstocks.fi/api/v2/public/assets): issuer-published xStock list with Solana deployment addresses; source for every admitted xStocks mint.
 - [Backed AAPLx final terms](https://www.lb.lt/uploads/prospectuses/docs/56851_d75fd29bdc01e77344e458eb95100611.pdf): includes the Solana mint address listed for the AAPLx product. This does not prove that raw on-chain tokens equal exactly one share.
-- [Ondo Solana simulator mint list](https://github.com/ondoprotocol/gm-solana-simulator/blob/main/constants.rs): Ondo-maintained code lists the AAPLon mainnet mint. Confirmed against the mint account and its Ondo-hosted metadata URI.
+- [Ondo Solana simulator mint list](https://github.com/ondoprotocol/gm-solana-simulator/blob/main/constants.rs): Ondo-maintained code lists every admitted Ondo mainnet mint, including AAPLon. Confirmed against the mint account and its Ondo-hosted metadata URI.
 
-No production Pyth feed ID has been admitted. The AAPLx/AAPLon mints and their share conversion are admitted in `src/server/registry.ts` on the issuer documents above, cross-checked against mainnet mint state (see docs/VALIDATION.md). Search results alone were not relied on.
+No production Pyth feed ID has been admitted. All 17 admitted pairs and their share conversion are admitted in `src/server/registry.ts` on the issuer documents above, cross-checked against mainnet mint state (see docs/VALIDATION.md). Search results alone were not relied on.

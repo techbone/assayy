@@ -6,7 +6,7 @@
 
 0:15–0:50 — Compare 10,000 USDC. AAPLx and AAPLon token counts are not comparable, because each mint carries its own dividend multiplier. Assay reads both multipliers on-chain and shows cost per real share, the spread and which wrapper wins. Click a wrapper to show the mint on Solscan.
 
-0:50–1:20 — Switch to 250k, then to 1 USDC. Show how the gap and route change with size (RFQ vs aggregator, or no quote at all), and that the 50/50 split is tested but not claimed when it loses.
+0:50–1:20 — Switch stocks: NFLX (both tokens carry a ×10 split multiplier — raw token counts would be 10× off) and SPY or NVDA. Switch to 250k, then to 1 USDC. Show how the gap and route change with size (RFQ vs aggregator, or no quote at all), and that the 50/50 split is tested but not claimed when it loses.
 
 1:20–1:45 — Show the fail-closed design: read-only mode, the pending Pyth reference, the US-session label. In demo mode, show a stale oracle blocking a trade, labeled as a test scenario.
 

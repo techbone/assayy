@@ -4,7 +4,7 @@
 
 ## Current milestone
 
-**Live read-only comparison on Solana mainnet.** Set `ASSAY_MODE=live` to compare Apple exposure across two issuer-verified wrappers, **AAPLx** (xStocks) and **AAPLon** (Ondo):
+**Live read-only comparison on Solana mainnet.** Set `ASSAY_MODE=live` to compare **17 stocks and ETFs** (AAPL, NVDA, TSLA, MSFT, GOOGL, AMZN, META, NFLX, AMD, COIN, HOOD, MSTR, PLTR, CRCL, SPY, QQQ, GLD). Each is issued on Solana by two issuers, xStocks (e.g. AAPLx) and Ondo (e.g. AAPLon), and every mint is verified against the issuer's published address list:
 
 - Real, size-specific Jupiter v2 quotes: the full order on each wrapper, plus a sampled 50/50 split.
 - On each request, both mints are read on-chain. Tokens are converted to share equivalents using each mint's active Scaled UI multiplier, which both issuers document as the share ratio.
@@ -49,7 +49,7 @@ Put secrets in `.env.local`, never in chat, source control, or `NEXT_PUBLIC_*` v
 - `PYTH_API_KEY`: obtain through https://terminal.pyth.network; confirm the key's access to the exact equity and wrapper feeds. A Pro subscription/trial is not assumed or purchased.
 - `SOLANA_RPC_URL`: an HTTPS mainnet RPC endpoint from your provider. Keep this server-side; add only narrow read/simulation methods in milestone three.
 
-Only assets in the reviewed registry can be compared live; today that is AAPL. Admission evidence and mainnet results are recorded in [validation](docs/VALIDATION.md). Add markets only through [asset verification](docs/ASSET_VERIFICATION.md). Discovery results can contain impostor tickers; they are not an allowlist.
+Only assets in the reviewed registry can be compared live; today that is 17 markets. Admission evidence and mainnet results are recorded in [validation](docs/VALIDATION.md). Add markets only through [asset verification](docs/ASSET_VERIFICATION.md). Discovery results can contain impostor tickers; they are not an allowlist.
 
 **Free-tier budget:** the Jupiter free key allows about 10 requests per 10 seconds. One comparison uses 4 quotes plus 1 RPC read. Identical requests within 8 s share one fan-out. Bursts queue inside a 9-calls-per-10-s budget instead of tripping Jupiter's limit. Anything beyond that gets a 429 with `Retry-After`, and the UI retries automatically. For a public deployment, use a dedicated RPC endpoint; the public mainnet RPC may throttle.
 
@@ -59,7 +59,7 @@ Only assets in the reviewed registry can be compared live; today that is AAPL. A
 | ------------------------ | ------------------------------------------------------------------------------------------ |
 | `src/domain/`            | Exact amounts, Token-2022 mint decoding, normalization, allocation search, guards, session |
 | `src/server/providers/`  | Validated, read-only Jupiter v2, Solana RPC mint reader, authenticated Pyth Hermes adapter |
-| `src/server/registry.ts` | Issuer-verified AAPL wrappers: mints, decimals, extension profile, evidence                |
+| `src/server/registry.ts` | 17 issuer-verified stock pairs: mints, decimals, extension profile, evidence               |
 | `src/server/live.ts`     | Live orchestration: mint admission, quote sampling, fail-closed checks, request dedupe     |
 | `src/fixtures/`          | Deliberately isolated synthetic market conditions                                          |
 | `src/app/api/`           | Stateless comparison and readiness endpoints                                               |
