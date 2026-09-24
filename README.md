@@ -14,7 +14,7 @@ Any drift in mint state (pause, new extension, symbol or decimals change), or a 
 
 What is not live yet:
 
-- **Pyth fair-value premium.** It shows as pending until feed access is verified.
+- **Pyth fair-value premium.** The adapter exists but is not shown in the app until feed access is verified; live results compare issuers against each other.
 - **Wallet execution.** No swap can be signed or submitted by this version.
 
 Demo mode (the default) keeps the labeled synthetic AAPL/NVDA scenarios, including stale-oracle and closed-market guards.

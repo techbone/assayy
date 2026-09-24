@@ -8,11 +8,11 @@
 
 0:50–1:20 — Switch stocks: NFLX (both tokens carry a ×10 split multiplier — raw token counts would be 10× off) and SPY or NVDA. Switch to 250k, then to 1 USDC. Show how the gap and route change with size (RFQ vs aggregator, or no quote at all), and that the 50/50 split is tested but not claimed when it loses.
 
-1:20–1:45 — Show the fail-closed design: read-only mode, the pending Pyth reference, the US-session label. In demo mode, show a stale oracle blocking a trade, labeled as a test scenario.
+1:20–1:45 — Show the fail-closed design: read-only mode, multipliers read on-chain, the US-session label, and the safety rules (paused token, changed settings or a dividend update in progress stops the comparison).
 
 1:45–2:00 — Roadmap: Pyth fair-value guard once feed access is verified, wallet execution with minimum-received checks, more verified tickers.
 
-Do not show or narrate wallet execution or a Pyth premium until they are live.
+Do not show or narrate wallet execution or a Pyth premium until they are live. The live UI does not display Pyth.
 
 ## Target story once execution and Pyth are live
 
