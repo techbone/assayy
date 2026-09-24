@@ -4,6 +4,7 @@ import { configuration } from "../../../server/config";
 import {
   BusyError,
   cachedLiveComparison,
+  jupiterBudget,
   LiveError,
 } from "../../../server/live";
 import { ProviderError } from "../../../server/providers/http";
@@ -50,6 +51,7 @@ export async function GET(request: Request) {
     const result = await cachedLiveComparison(parsed.data, {
       jupiter: new JupiterClient(config.jupiterKey),
       solana: new SolanaClient(config.rpcUrl),
+      budget: jupiterBudget,
     });
     return Response.json(result, { headers });
   } catch (error) {
@@ -67,7 +69,7 @@ export async function GET(request: Request) {
         429,
         "Quote sources are busy. Try again in a few seconds.",
         "RATE_LIMITED",
-        { "Retry-After": "10" },
+        { "Retry-After": "5" },
       );
     if (error instanceof ProviderError)
       return fail(

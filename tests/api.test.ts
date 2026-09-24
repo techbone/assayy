@@ -3,10 +3,12 @@ vi.mock("server-only", () => ({}));
 import { GET as compare } from "../src/app/api/compare/route";
 import { GET as health } from "../src/app/api/health/route";
 import { USDC_MINT } from "../src/server/providers/jupiter";
+import { jupiterBudget } from "../src/server/live";
 import { TOKEN_2022_PROGRAM } from "../src/server/registry";
 import { AAPLON_MINT_BASE64, AAPLX_MINT_BASE64 } from "./fixtures/mints";
 
 afterEach(() => {
+  jupiterBudget.reset();
   vi.unstubAllEnvs();
   vi.unstubAllGlobals();
 });
@@ -133,7 +135,7 @@ describe("live API", () => {
     vi.stubGlobal("fetch", upstream(429));
     const response = await compare(request("ticker=AAPL&amount=321"));
     expect(response.status).toBe(429);
-    expect(response.headers.get("retry-after")).toBe("10");
+    expect(response.headers.get("retry-after")).toBe("5");
     expect((await response.json()).code).toBe("RATE_LIMITED");
   });
   it("reports provider outages without substituting data", async () => {

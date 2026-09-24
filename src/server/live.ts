@@ -92,6 +92,38 @@ function admit(
   };
 }
 
+export class BusyError extends Error {}
+
+/** Sliding-window budget for Jupiter calls. Waits for room instead of tripping the free tier's 429. */
+export class CallBudget {
+  private calls: number[] = [];
+  constructor(
+    private readonly capacity = 9, // free tier allows 10 per 10 s; keep one spare
+    private readonly windowMs = 10_000,
+    private readonly maxWaitMs = 10_000,
+  ) {}
+  async reserve(count: number) {
+    const deadline = Date.now() + this.maxWaitMs;
+    for (;;) {
+      const now = Date.now();
+      this.calls = this.calls.filter((at) => at > now - this.windowMs);
+      if (this.calls.length + count <= this.capacity) {
+        for (let i = 0; i < count; i++) this.calls.push(now);
+        return;
+      }
+      const freeAt =
+        this.calls[this.calls.length + count - this.capacity - 1]! +
+        this.windowMs;
+      if (freeAt > deadline) throw new BusyError();
+      await new Promise((resolve) => setTimeout(resolve, freeAt - now + 25));
+    }
+  }
+  reset() {
+    this.calls = [];
+  }
+}
+export const jupiterBudget = new CallBudget();
+
 type Order = Awaited<ReturnType<JupiterClient["quote"]>>;
 const feeLamports = (order: Order) =>
   BigInt(
@@ -102,7 +134,12 @@ const feeLamports = (order: Order) =>
 
 export async function liveComparison(
   request: ComparisonRequest,
-  deps: { jupiter: JupiterClient; solana: SolanaClient; clock?: () => number },
+  deps: {
+    jupiter: JupiterClient;
+    solana: SolanaClient;
+    budget?: CallBudget;
+    clock?: () => number;
+  },
 ): Promise<Comparison> {
   const asset = findAsset(request.ticker);
   if (!asset)
@@ -119,6 +156,7 @@ export async function liveComparison(
       .filter((input) => input > 0n)
       .map((input) => ({ wrapper, input })),
   );
+  await deps.budget?.reserve(samples.length);
   const [chain, ...settled] = await Promise.all([
     deps.solana.mints(asset.wrappers.map((w) => w.mint)),
     ...samples.map(({ wrapper, input }) =>
@@ -140,6 +178,7 @@ export async function liveComparison(
     (sum, { order }) => sum + feeLamports(order),
     0n,
   );
+  if (lamports > 0n) await deps.budget?.reserve(1);
   const solUsd = lamports > 0n ? await deps.jupiter.solUsd() : ratio(0n);
   const quotes: Quote[] = orders.map(({ wrapper, input, order }) => ({
     wrapperId: wrapper.id,
@@ -236,10 +275,9 @@ const recent = new Map<
   string,
   { until: number; result: Promise<Comparison> }
 >();
-const MAX_IN_FLIGHT = 2;
+// The call budget queues bursts; this caps how many requests may wait on it at once.
+const MAX_IN_FLIGHT = 3;
 let inFlight = 0;
-
-export class BusyError extends Error {}
 
 export function cachedLiveComparison(
   request: ComparisonRequest,

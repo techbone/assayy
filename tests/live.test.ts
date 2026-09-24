@@ -3,7 +3,12 @@ vi.mock("server-only", () => ({}));
 import { format, multiply, ratio } from "../src/domain/amount";
 import { decodeMint, EXTENSION } from "../src/domain/mint";
 import { usEquitySession } from "../src/domain/session";
-import { liveComparison, LiveError } from "../src/server/live";
+import {
+  BusyError,
+  CallBudget,
+  liveComparison,
+  LiveError,
+} from "../src/server/live";
 import { ProviderError } from "../src/server/providers/http";
 import { JupiterClient, USDC_MINT } from "../src/server/providers/jupiter";
 import { SolanaClient } from "../src/server/providers/solana";
@@ -273,4 +278,35 @@ describe("US equity session", () => {
   ])("%s is %s", (iso, session) =>
     expect(usEquitySession(at(iso))).toBe(session),
   );
+});
+
+describe("Jupiter free-tier call budget", () => {
+  it("queues a burst instead of exceeding 9 calls per 10 s", async () => {
+    vi.useFakeTimers();
+    try {
+      const budget = new CallBudget();
+      await budget.reserve(4);
+      await budget.reserve(4);
+      let third = false;
+      const pending = budget.reserve(4).then(() => (third = true));
+      await vi.advanceTimersByTimeAsync(9_000);
+      expect(third).toBe(false);
+      await vi.advanceTimersByTimeAsync(1_100);
+      await pending;
+      expect(third).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+  it("reports busy when the wait would exceed its deadline", async () => {
+    const budget = new CallBudget(9, 10_000, 1_000);
+    await budget.reserve(9);
+    await expect(budget.reserve(1)).rejects.toBeInstanceOf(BusyError);
+  });
+  it("reserves quote calls before fanning out", async () => {
+    const budget = new CallBudget();
+    const reserve = vi.spyOn(budget, "reserve");
+    await run({ budget });
+    expect(reserve).toHaveBeenCalledWith(4);
+  });
 });
