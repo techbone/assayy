@@ -23,7 +23,7 @@ flowchart LR
     EXEC -. signatures and reconciliation .-> RECEIPT[Browser receipt and Solana ledger]
 ```
 
-Implemented now: UI, synthetic comparison endpoint, domain logic, read-only provider adapters, request validation, typed error boundaries, configuration health, tests and CI. Registry population, actual provider orchestration, mint RPC reads, simulation, wallet and execution arrows are still pending. No external program deployed.
+Implemented now: UI, demo and live comparison endpoints, domain logic, verified AAPL registry, Token-2022 mint reads over RPC, live Jupiter quote orchestration, request validation, typed error boundaries, configuration health and tests. The Pyth reference, simulation, wallet and execution arrows are still pending. No external program deployed.
 
 ## Request lifecycle
 
