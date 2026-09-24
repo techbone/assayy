@@ -112,6 +112,9 @@ export type BuyQuote = {
   minimumShares: string;
   router: string;
   gasless: boolean;
+  /** SOL paid by the wallet: network fee, and a one-time token account deposit if needed. */
+  networkFeeSol: string;
+  accountDepositSol: string;
   expiresAt: number;
 };
 export type BuyResult = {

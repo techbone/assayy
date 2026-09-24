@@ -148,6 +148,8 @@ export async function liveComparison(
     solana: SolanaClient;
     budget?: CallBudget;
     clock?: () => number;
+    /** Set when wallet buying is enabled on this deployment. */
+    executionMaxUsdc?: string;
   },
 ): Promise<Comparison> {
   const asset = findAsset(request.ticker);
@@ -259,7 +261,9 @@ export async function liveComparison(
     result,
     slot: chain.slot,
     reasons: [
-      "Read-only comparison — wallet execution is not enabled in this build",
+      deps.executionMaxUsdc
+        ? `Buying is capped at ${deps.executionMaxUsdc} USDC per order and always needs your wallet's approval`
+        : "Read-only comparison — wallet execution is not enabled in this build",
       ...(session === "open"
         ? []
         : [
@@ -272,7 +276,11 @@ export async function liveComparison(
           ]
         : []),
       ...(feeTotal.n === 0n
-        ? ["Quoted routes report zero network fee (gasless RFQ)"]
+        ? [
+            deps.executionMaxUsdc
+              ? "Comparison quotes report no network fee; a real buy shows its exact SOL cost before you sign"
+              : "Quoted routes report zero network fee (gasless RFQ)",
+          ]
         : []),
     ],
   });
@@ -374,6 +382,20 @@ export async function prepareBuy(
       ? `${order.router} · ${order.swapType}`
       : order.router,
     gasless: order.gasless === true,
+    networkFeeSol: format(
+      ratio(
+        BigInt(
+          (order.signatureFeeLamports ?? 0) +
+            (order.prioritizationFeeLamports ?? 0),
+        ),
+        1_000_000_000n,
+      ),
+      6,
+    ),
+    accountDepositSol: format(
+      ratio(BigInt(order.rentFeeLamports ?? 0), 1_000_000_000n),
+      6,
+    ),
     expiresAt,
   };
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Comparison, ComparisonRequest } from "../domain/contracts";
+import { BuyPanel } from "./buy-panel";
 
 function display(value: string) {
   const [whole = "0", fraction] = value.split(".");
@@ -10,9 +11,12 @@ function display(value: string) {
 export function Workbench({
   mode,
   stocks,
+  maxBuyUsdc,
 }: {
   mode: "demo" | "live" | "unavailable";
   stocks: { ticker: string; name: string }[];
+  /** Set only when wallet buying is enabled on this deployment. */
+  maxBuyUsdc: string | null;
 }) {
   const [ticker, setTicker] = useState<ComparisonRequest["ticker"]>("AAPL");
   const [amount, setAmount] = useState("10000");
@@ -623,7 +627,11 @@ export function Workbench({
                   <span className="guard-icon">⌑</span>
                   <div>
                     <strong>
-                      {live ? "Read-only mode" : "Execution locked"}
+                      {live
+                        ? maxBuyUsdc
+                          ? "Safety checks"
+                          : "Read-only mode"
+                        : "Execution locked"}
                     </strong>
                     {result.execution.reasons.map((reason) => (
                       <p key={reason}>{reason}</p>
@@ -633,6 +641,20 @@ export function Workbench({
                     )}
                   </div>
                 </div>
+                {live && maxBuyUsdc && (
+                  <BuyPanel
+                    key={`${result.ticker}:${result.generatedAt}`}
+                    ticker={result.ticker}
+                    wrappers={result.wrappers}
+                    defaultAmount={
+                      Number(result.amount) <= Number(maxBuyUsdc)
+                        ? result.amount.replace(/\.?0+$/, "")
+                        : maxBuyUsdc
+                    }
+                    maxUsdc={maxBuyUsdc}
+                    now={now}
+                  />
+                )}
               </>
             )}
           </div>

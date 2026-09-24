@@ -1,3 +1,4 @@
+import { format, ratio } from "../../../domain/amount";
 import { comparisonRequest } from "../../../domain/contracts";
 import { DEMO_STOCKS, demoComparison } from "../../../fixtures/comparison";
 import { configuration } from "../../../server/config";
@@ -54,6 +55,9 @@ export async function GET(request: Request) {
       jupiter: new JupiterClient(config.jupiterKey),
       solana: new SolanaClient(config.rpcUrl),
       budget: jupiterBudget,
+      executionMaxUsdc: config.execution
+        ? format(ratio(config.executionMaxRaw, 1_000_000n), 0)
+        : undefined,
     });
     return Response.json(result, { headers });
   } catch (error) {
