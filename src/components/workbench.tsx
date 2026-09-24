@@ -309,7 +309,7 @@ export function Workbench({ mode }: { mode: "demo" | "live" | "unavailable" }) {
             <button
               className="primary"
               type="submit"
-              disabled={pending || mode === "unavailable"}
+              disabled={pending || mode === "unavailable" || now === 0}
             >
               {pending
                 ? notice
