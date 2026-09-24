@@ -51,7 +51,7 @@ Put secrets in `.env.local`, never in chat, source control, or `NEXT_PUBLIC_*` v
 
 Only assets in the reviewed registry can be compared live; today that is AAPL. Admission evidence and mainnet results are recorded in [validation](docs/VALIDATION.md). Add markets only through [asset verification](docs/ASSET_VERIFICATION.md). Discovery results can contain impostor tickers; they are not an allowlist.
 
-**Free-tier budget:** the Jupiter free key allows about 10 requests per 10 seconds. One comparison uses 4 quotes plus 1 RPC read. Identical requests within 8 s share one fan-out, and at most 2 comparisons run at once. Excess load gets a 429 with `Retry-After`. For a public deployment, use a dedicated RPC endpoint; the public mainnet RPC may throttle.
+**Free-tier budget:** the Jupiter free key allows about 10 requests per 10 seconds. One comparison uses 4 quotes plus 1 RPC read. Identical requests within 8 s share one fan-out. Bursts queue inside a 9-calls-per-10-s budget instead of tripping Jupiter's limit. Anything beyond that gets a 429 with `Retry-After`, and the UI retries automatically. For a public deployment, use a dedicated RPC endpoint; the public mainnet RPC may throttle.
 
 ## Project map
 
