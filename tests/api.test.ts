@@ -117,7 +117,6 @@ describe("live API", () => {
     expect(await health().json()).toMatchObject({
       liveReady: true,
       verifiedAssets: expect.arrayContaining(["AAPL", "NVDA", "SPY"]),
-      fairValueReference: false,
     });
   });
   it("rejects unverified tickers and demo-only scenarios", async () => {

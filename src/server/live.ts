@@ -251,7 +251,6 @@ export async function liveComparison(
     slot: chain.slot,
     reasons: [
       "Read-only comparison — wallet execution is not enabled in this build",
-      "Pyth fair-value check not connected yet — wrappers are compared against each other",
       ...(session === "open"
         ? []
         : [

@@ -370,7 +370,9 @@ export function Workbench({
                 </div>
                 <h2>Look beyond the token price.</h2>
                 <p>
-                  Compare equal stock exposure, check the premium,
+                  {live
+                    ? "Compare how many real shares each token buys you,"
+                    : "Compare equal stock exposure, check the premium,"}
                   <br />
                   and see whether splitting your order helps.
                 </p>
@@ -435,7 +437,7 @@ export function Workbench({
                             ? "closed"
                             : "session unknown"}
                       </span>
-                      <span>Pyth fair-value check: not connected</span>
+                      <span>Multipliers read on-chain</span>
                       {result.source.slot !== null && (
                         <span>Slot {result.source.slot.toLocaleString()}</span>
                       )}
@@ -664,8 +666,9 @@ export function Workbench({
             <span className="method-index">03</span>
             <h3>Know when to stop.</h3>
             <p>
-              Stale references, uncertain exposure, or excessive premiums block
-              the trading path.
+              {live
+                ? "A paused token, changed token settings, or a dividend update in progress stops the comparison instead of guessing."
+                : "Stale references, uncertain exposure, or excessive premiums block the trading path."}
             </p>
           </article>
         </section>

@@ -110,7 +110,7 @@ describe("live comparison", () => {
       result.wrappers.find((w) => w.label === "AAPLon")!.spreadBps,
     ).not.toBe("0.0");
     expect(result.plan.edge).toMatchObject({ versus: "AAPLon" });
-    expect(result.execution.reasons.join(" ")).toMatch(/Pyth/);
+    expect(result.execution.reasons.join(" ")).not.toMatch(/Pyth/);
   });
   it("samples the full order on each wrapper plus a 50/50 split (4 quotes)", async () => {
     const client = jupiter();

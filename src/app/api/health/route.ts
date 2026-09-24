@@ -21,7 +21,6 @@ export function GET() {
           config.mode === "live" &&
           Boolean(config.jupiterKey && config.rpcUrl) &&
           verifiedAssets.length > 0,
-        fairValueReference: false,
       },
       { headers: { "Cache-Control": "no-store" } },
     );
