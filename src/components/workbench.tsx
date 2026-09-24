@@ -15,6 +15,7 @@ export function Workbench({ mode }: { mode: "demo" | "live" | "unavailable" }) {
   const [result, setResult] = useState<Comparison | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [now, setNow] = useState(0);
   const [theme, setTheme] = useState<"light" | "dark" | null>(null);
   const request = useRef<AbortController | null>(null);
@@ -49,6 +50,7 @@ export function Workbench({ mode }: { mode: "demo" | "live" | "unavailable" }) {
     request.current?.abort();
     setResult(null);
     setError("");
+    setNotice("");
     setPending(false);
   }
   async function compare() {
@@ -60,22 +62,51 @@ export function Workbench({ mode }: { mode: "demo" | "live" | "unavailable" }) {
     setError("");
     setResult(null);
     try {
-      const response = await fetch(
-        `/api/compare?${new URLSearchParams({ ticker, amount, scenario })}`,
-        { signal: controller.signal },
-      );
-      const data = await response.json();
-      if (!response.ok)
-        throw new Error(data.error ?? "Unable to compare routes");
-      if (id === generation.current) {
-        setResult(data as Comparison);
-        setNow(Math.floor(Date.now() / 1000));
+      for (let attempt = 0; ; attempt++) {
+        const response = await fetch(
+          `/api/compare?${new URLSearchParams({ ticker, amount, scenario })}`,
+          { signal: controller.signal },
+        );
+        const data = await response.json();
+        // Free-tier quote limits clear within seconds: wait and retry rather than fail.
+        if (response.status === 429 && attempt < 2) {
+          const seconds = Math.min(
+            10,
+            Math.max(1, Number(response.headers.get("retry-after")) || 5),
+          );
+          setNotice(
+            `Quote sources are busy — retrying in ${seconds}s. Nothing is lost.`,
+          );
+          await new Promise<void>((resolve, reject) => {
+            const timer = setTimeout(resolve, seconds * 1000);
+            controller.signal.addEventListener(
+              "abort",
+              () => {
+                clearTimeout(timer);
+                reject(new DOMException("Aborted", "AbortError"));
+              },
+              { once: true },
+            );
+          });
+          setNotice("");
+          continue;
+        }
+        if (!response.ok)
+          throw new Error(data.error ?? "Unable to compare routes");
+        if (id === generation.current) {
+          setResult(data as Comparison);
+          setNow(Math.floor(Date.now() / 1000));
+        }
+        break;
       }
     } catch (cause) {
       if (id === generation.current && !controller.signal.aborted)
         setError(cause instanceof Error ? cause.message : "Comparison failed");
     } finally {
-      if (id === generation.current) setPending(false);
+      if (id === generation.current) {
+        setPending(false);
+        setNotice("");
+      }
     }
   }
   const expired = result ? now >= result.expiresAt : false;
@@ -281,7 +312,9 @@ export function Workbench({ mode }: { mode: "demo" | "live" | "unavailable" }) {
               disabled={pending || mode === "unavailable"}
             >
               {pending
-                ? "Examining routes…"
+                ? notice
+                  ? "Waiting for quotes…"
+                  : "Examining routes…"
                 : result
                   ? "Refresh comparison"
                   : "Compare wrappers"}
@@ -305,6 +338,11 @@ export function Workbench({ mode }: { mode: "demo" | "live" | "unavailable" }) {
                   : "Awaiting an order"}
               </span>
             </div>
+            {notice && (
+              <div className="notice" role="status">
+                {notice}
+              </div>
+            )}
             {error && (
               <div className="error" role="alert">
                 {error}

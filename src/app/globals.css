@@ -648,6 +648,14 @@ select {
   color: #92927b;
   margin: 5px 0 0;
 }
+.notice {
+  padding: 14px 20px;
+  color: #5e6d56;
+  background: #ecefe2;
+  border-radius: 4px;
+  margin-top: 20px;
+  font-size: 12px;
+}
 .error {
   padding: 20px;
   color: #9b4037;
@@ -863,6 +871,10 @@ html[data-theme="dark"] .guard strong {
 html[data-theme="dark"] .guard p,
 html[data-theme="dark"] .guard-icon {
   color: #b6c2ae;
+}
+html[data-theme="dark"] .notice {
+  color: #d5e7cb;
+  background: #1b281d;
 }
 html[data-theme="dark"] .error {
   color: #ffd3c8;
